@@ -44,7 +44,7 @@ def get_headers(search_soup):
         opt_table = div.find('table')
         if opt_table:
             headers = ['Date', 'Expire Date', 'Option Type']
-            headers.extend([str(get_clean(th.text)) for th in opt_table.find_all('th')])
+            headers.extend([get_clean(th.text) for th in opt_table.find_all('th')])
             return headers
 
 
