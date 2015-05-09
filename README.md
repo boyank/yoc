@@ -1,7 +1,9 @@
 # yahoo_options
 yahoo_options.py is a command line tool for scraping financial options prices and related data from <a href=http://finance.yahoo.com/q/op>finance.yahoo.com</a>
 
-It's written in Python 2.7.9 and can be used to scrape current options data for one or more tickers. List of tickers may be supplied as command line arguments.
+It's written in Python 2.7.9 and also converted to Python 3.4 using 2to3 tool.
+
+It can be used to scrape current options data for one or more tickers. List of tickers may be supplied as command line arguments.
 For example
 
 C:\>yahoo_options.py googl yhoo
