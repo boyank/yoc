@@ -7,8 +7,22 @@ from datetime import date
 import sys
 import csv
 import os
-
+import ConfigParser
 from bs4 import BeautifulSoup
+
+
+def read_config():
+    """Read configuration file config.ini
+
+    :return: tickers as list
+    """
+    my_parser = ConfigParser.ConfigParser()
+    my_parser.read('config.ini')
+    try:
+        tickers_list = my_parser.get('Tickers', 'TickerList')
+        return tickers_list.replace(' ', '').replace(';', ',').split(',')
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        return None
 
 
 def get_soup(url):
@@ -34,7 +48,7 @@ def get_soup(url):
 def get_headers(search_soup):
     """Scrape headers
 
-    Given BeautifulSoup object, expire-date
+    Given BeautifulSoup object
     :param search_soup: BeautifulSoup object
     :return: headers as list
     """
@@ -123,11 +137,15 @@ def main(ticker):
 
 
 if __name__ == '__main__':
-    # check if any command line arguments were supplied
-    if len(sys.argv) > 1:
+    # check if config.ini exists and if not found check if any command line arguments were supplied
+    tickers = None
+    if len(sys.argv) > 1: #no config.ini, check for command line
         tickers = sys.argv[1:]
-    else:  # no command line arguments
+    elif os.path.exists('config.ini'):
+        tickers = read_config()
+    if not tickers:  # no config.ini or command line arguments
         tickers = raw_input('Enter ticker or tickers, separated by comma: ').replace(' ', '').split(',')  # ask user
+
     if tickers[0].lower() != 'quit':  # check if user decided to quit
         for tkr in tickers:  # loop trough tickers
             print 'Start download for ticker {}'.format(tkr.upper())
