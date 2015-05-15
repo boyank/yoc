@@ -5,9 +5,13 @@ It's written in Python 2.7.9 and also ported to Python 3.4 using 2to3 tool.
 
 It can be used to scrape current options data for one or more tickers.
 There are several ways to supply list of tickers (in order of priority):
--using config.ini file
+
 -as command line arguments
+
+-using config.ini file
+
 -as user input during script execution.
+
 
 Sample config.ini is included.
 
