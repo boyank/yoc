@@ -73,19 +73,27 @@ def get_quotes(search_soup, expire_date, options=None):
     """
 
     all_quotes = []
+    today_date = datetime.strftime(date.today(), '%d.%m.%Y')
+    exp_date = datetime.strftime(expire_date, '%d.%m.%Y')
     if not options:
         options = ['Call', 'Put']
     for opt in options:
         div = search_soup.find('div', id='options{}sTable'.format(opt))
         if div:
             opt_table = div.find('table')
-            for tr in opt_table.find('tbody').find_all('tr'):
-                row_quotes = [td.text.strip() for td in tr.find_all('td')]
-                if row_quotes:
-                    my_quotes = [datetime.strftime(date.today(), '%d.%m.%Y'),
-                                 datetime.strftime(expire_date, '%d.%m.%Y'), opt]
-                    my_quotes.extend(row_quotes)
-                    all_quotes.append(my_quotes)
+            if opt_table:
+                tbody = opt_table.find('tbody')
+                if tbody:
+                    for tr in tbody.find_all('tr'):
+                        row_quotes = [td.text.strip().replace(',', '') for td in tr.find_all('td')]
+                        if row_quotes:
+                            my_quotes = [today_date, exp_date, opt]
+                            my_quotes.extend(row_quotes)
+                            all_quotes.append(my_quotes)
+                else:
+                    print('\nUnable to find <tbody> tag for {} options for expire date {}\n'.format(opt, exp_date))
+            else:
+                print('\nUnable to find <table> for {} options for expire date {}\n'.format(opt, exp_date))
     return all_quotes
 
 
@@ -139,7 +147,7 @@ def main(ticker):
 if __name__ == '__main__':
     # check if config.ini exists and if not found check if any command line arguments were supplied
     tickers = None
-    if len(sys.argv) > 1: #no config.ini, check for command line
+    if len(sys.argv) > 1:  # no config.ini, check for command line
         tickers = sys.argv[1:]
     elif os.path.exists('config.ini'):
         tickers = read_config()
@@ -148,6 +156,6 @@ if __name__ == '__main__':
 
     if tickers[0].lower() != 'quit':  # check if user decided to quit
         for tkr in tickers:  # loop trough tickers
-            print('Start download for ticker {}'.format(tkr.upper()))
+            print('\nStart download for ticker {}'.format(tkr.upper()))
             main(tkr)
         input('Download complete. Press any key...')
