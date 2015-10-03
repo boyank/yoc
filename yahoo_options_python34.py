@@ -41,7 +41,7 @@ def get_soup(url):
             print('The server couldn\'t fulfill the request.')
             print('Error code: ', e.code)
         return None
-    my_soup = BeautifulSoup(html_source)
+    my_soup = BeautifulSoup(html_source, 'html.parser')
     return my_soup
 
 
