@@ -23,4 +23,6 @@ If no command line arguments were supplied, user will be asked to enter one or m
 
 _Enter ticker or tickers, separated by comma:_ googl,yhoo
 
+It will try to use lxml parser (recommended) for the BeautifulSoup object if present. If lxml is not installed, it will use the default html.parser instead.
+
 Downloaded data are stored as a csv file, one file for each ticker. If file already exists, it will append the new data. 
