@@ -8,7 +8,7 @@ import sys
 import csv
 import os
 import ConfigParser
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, FeatureNotFound
 
 
 def read_config():
@@ -41,7 +41,10 @@ def get_soup(url):
             print 'The server couldn\'t fulfill the request.'
             print 'Error code: ', e.code
         return None
-    my_soup = BeautifulSoup(html_source, "html.parser")
+    try:    
+        my_soup = BeautifulSoup(html_source, 'lxml')    
+    except FeatureNotFound:    
+        my_soup = BeautifulSoup(html_source, 'html.parser')
     return my_soup
 
 
