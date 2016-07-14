@@ -1,6 +1,6 @@
 # yahoo_options
 
-Recent changes in yahoo.com website design made the script useless as of this moment. I will try to fix the problem, but no promise as to the deadline for this.
+**Recent changes in yahoo.com website design made the script useless as of this moment. I will try to fix the problem, but no promise as to the deadline for this.**
 
 
 yahoo_options.py is a command line tool for scraping financial options prices and related data from <a href=http://finance.yahoo.com/q/op>finance.yahoo.com</a>
