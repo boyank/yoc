@@ -2,13 +2,15 @@
 
 import urllib2
 import time
+from random import randrange
 from datetime import datetime
 from datetime import date
+from datetime import timedelta
 import sys
 import csv
+import json
 import os
 import ConfigParser
-from bs4 import BeautifulSoup, FeatureNotFound
 
 
 def read_config():
@@ -25,138 +27,107 @@ def read_config():
         return None
 
 
-def get_soup(url):
-    """Cooking the soup
+def create_link(ticker, expiration_date=None):
+    srv = randrange(1, 3, 1)  # select randomly to use query1 or query2
+    if expiration_date:
+        link = 'https://query{}.finance.yahoo.com/v7/finance/options/{}?date={}'.format(srv, ticker, expiration_date)
+    else:
+        link = 'https://query{}.finance.yahoo.com/v7/finance/options/{}'.format(srv, ticker)
+    return link
 
-    :param url: string
-    :return: BeautifulSoup object
-    """
+
+def get_json_data(ticker, expiration_date=None, return_value='all'):
+    url = create_link(ticker, expiration_date=expiration_date)
     try:
-        html_source = urllib2.urlopen(url)
+        chain_json = json.load(urllib2.urlopen(url))
     except urllib2.URLError as e:
         if hasattr(e, 'reason'):
             print 'We failed to reach a server.'
             print 'Reason: ', e.reason
+            print 'Unable to retrieve required data.'
+            print 'Possible reasons:\n1. No Internet connection - check and/or try again later.'
+            print '2. No such ticker {0}\n3. There are no options for ticker {0}'.format(ticker)
         elif hasattr(e, 'code'):
             print 'The server couldn\'t fulfill the request.'
             print 'Error code: ', e.code
-        return None
-    try:    
-        my_soup = BeautifulSoup(html_source, 'lxml')    
-    except FeatureNotFound:    
-        my_soup = BeautifulSoup(html_source, 'html.parser')
-    return my_soup
-
-
-def get_headers(search_soup):
-    """Scrape headers
-
-    Given BeautifulSoup object
-    :param search_soup: BeautifulSoup object
-    :return: headers as list
-    """
-
-    div = search_soup.find('div', id='optionsCallsTable')
-    if div:
-        opt_table = div.find('table')
-        if opt_table:
-            headers = ['Date', 'Expire Date', 'Option Type']
-            headers.extend([get_clean(th.text) for th in opt_table.find_all('th')])
-            return headers
-
-
-def get_quotes(search_soup, expire_date, options=None):
-    """Scrape quotes row by row
-
-    Given BeautifulSoup object, expire-date
-    :param search_soup: BeautifulSoup object
-    :param expire_date: datetime object
-    :param options: list or tuple of string option types, e.g. ['call']. Default is None resulting in both Call and Put
-    :return: list of lists of quotes data
-    """
-
-    all_quotes = []
-    today_date = datetime.strftime(date.today(), '%d.%m.%Y')
-    exp_date = datetime.strftime(expire_date, '%d.%m.%Y')
-    if not options:
-        options = ['Call', 'Put']
-    for opt in options:
-        div = search_soup.find('div', id='options{}sTable'.format(opt))
-        if div:
-            opt_table = div.find('table')
-            if opt_table:
-                tbody = opt_table.find('tbody')
-                if tbody:
-                    for tr in tbody.find_all('tr'):
-                        row_quotes = [td.text.strip().replace(',', '') for td in tr.find_all('td')]
-                        if row_quotes:
-                            my_quotes = [today_date, exp_date, opt]
-                            my_quotes.extend(row_quotes)
-                            all_quotes.append(my_quotes)
-                else:
-                    print '\nUnable to find <tbody> tag for {} options for expire date {}\n'.format(opt, exp_date)
-            else:
-                print '\nUnable to find <table> for {} options for expire date {}\n'.format(opt, exp_date)
-    return all_quotes
-
-
-def get_clean(s):
-    """Clean string from specific chars
-
-    Clean headers from specific unicode chars, used as up/down arrows for sort
-    :param s: string to clean
-    :return: clean string
-    """
-    return s.replace(u'\n', '').replace(u'\ue004\ue002', '').replace(u'\u2235 Filter', '')
+            print 'Unable to retrieve required data.'
+            print 'Possible reasons:\n1. No Internet connection - check and/or try again later.'
+            print '2. No such ticker {0}\n3. There are no options for ticker {0}'.format(ticker)
+        return []
+    if chain_json['optionChain']['result']:
+        if return_value == 'expiration dates':
+            return chain_json['optionChain']['result'][0]['expirationDates']
+        elif return_value == 'options':
+            return chain_json['optionChain']['result'][0]['options'][0]
+        else:
+            return chain_json
+    else:
+        return []
 
 
 def main(ticker):
-    soup = get_soup('http://finance.yahoo.com/q/op?s={}'.format(ticker))
-    if soup:
-        options_menu = soup.find('div', id='options_menu')
-        if options_menu:
-            select = options_menu.find('select')
-            expire_dates = [[datetime.strptime(option.text, '%B %d, %Y'), option['data-selectbox-link']]
-                            for option in select.find_all('option')]
-            if expire_dates:
-                headers = get_headers(soup)
-                csv.register_dialect('yahoo', delimiter=',', quoting=csv.QUOTE_NONE, lineterminator='\n')
-                if os.path.isfile('{}.csv'.format(ticker)):
-                    with open('{}.csv'.format(ticker), 'r') as f:
-                        current_headers = csv.DictReader(f).fieldnames
-                else:
-                    current_headers = None
-                with open('{}.csv'.format(ticker), 'a') as f:
-                    my_writer = csv.DictWriter(f, fieldnames=current_headers, dialect='yahoo')
-                    # add headers if new file
-                    if not my_writer.fieldnames:
-                        my_writer.fieldnames = headers
-                        my_writer.writeheader()
-                    # loop trough all expire dates
-                    for exp_date, link in expire_dates:
-                        print 'Expire date and link: {}, {}'.format(datetime.strftime(exp_date,  '%d.%m.%Y'), link)
-                        soup = get_soup('http://finance.yahoo.com{}'.format(link))
-                        my_writer.writerows([dict(zip(headers, quotes)) for quotes in get_quotes(soup, exp_date)])
-                        time.sleep(1)
-                        # break
-            else:
-                print 'It looks like there are no options for ticker: {}'.format(ticker)
-        else:
-            print 'It looks like there is no such ticker: {}'.format(ticker)
+
+    # change header_template to include the fields you want from fieldnames
+    # i.e. the full list of possible fields
+
+    header_template = ('Date', 'Expire Date', 'Option Type', 'Strike', 'Contract Name', 'Last', 'Bid', 'Ask', 'Change',
+                       '%Change', 'Volume', 'Open Interest', 'Implied Volatility')
+    all_fields = {'Implied Volatility': 'impliedVolatility', 'Last Trade Date': 'lastTradeDate',
+                  'Contract Size': 'contractSize', 'Last': 'lastPrice', 'Contract Name': 'contractSymbol',
+                  'In The Money': 'inTheMoney', 'Bid': 'bid', 'Ask': 'ask', 'Volume': 'volume',
+                  'Currency': 'currency', 'Expire Date': 'expiration', '%Change': 'percentChange',
+                  'Strike': 'strike', 'Open Interest': 'openInterest', 'Change': 'change', 'Date': 'todayDate',
+                  'Option Type': 'optionType'}
+
+    csv.register_dialect('yahoo', delimiter=',', quoting=csv.QUOTE_NONE, lineterminator='\n')
+
+    # retrieve or create list of fieldnames
+    if os.path.isfile('{}.csv'.format(ticker)):  # already there is file from previous download
+        found_file = True
+        with open('{}.csv'.format(ticker), 'r') as f:
+            current_headers = csv.DictReader(f).fieldnames
+            try:
+                wr_fieldnames = [all_fields[flnm] for flnm in current_headers]
+            except KeyError:
+                print 'The header line has been changed and at lest one field is unknown.'
+                wr_fieldnames = []
     else:
-        print 'Unable to retrieve html. Check the Internet connection and/or try again later.'
+        wr_fieldnames = [all_fields[fldnm] for fldnm in header_template]  # create fieldnames from header_template
+        found_file = False
+
+    # write to file
+    if wr_fieldnames:
+        with open('{}.csv'.format(ticker), 'a') as f:
+            my_writer = csv.DictWriter(f, fieldnames=wr_fieldnames, dialect='yahoo')
+            # add headers if new file
+            if not found_file:
+                f.writelines('{}\n'.format(','.join(header_template)))
+            expire_dates = get_json_data(ticker, return_value='expiration dates')
+
+            # loop trough all expire dates
+            for exp_date in expire_dates:
+                ed = datetime.strftime(date(1970, 1, 1) + timedelta(seconds=int(exp_date)), '%d.%m.%Y')
+                print 'Ticker and expire date: {}, {}'.format(ticker, ed)
+                options_data = get_json_data(ticker, expiration_date=exp_date, return_value='options')
+                for opt_type in ('calls', 'puts'):
+                    for option in options_data.setdefault(opt_type, []):
+                        option = {key:value for key, value in option.iteritems() if key in wr_fieldnames}
+                        option['optionType'] = opt_type.upper()[:-1]
+                        option['todayDate'] = datetime.strftime(date.today(), '%d.%m.%Y')
+                        option['expiration'] = ed
+                        my_writer.writerow(option)
+                time.sleep(1)
 
 
 if __name__ == '__main__':
     # check if config.ini exists and if not found check if any command line arguments were supplied
     tickers = None
-    if len(sys.argv) > 1:  # no config.ini, check for command line
+    if len(sys.argv) > 1:  # command line arguments available
         tickers = sys.argv[1:]
-    elif os.path.exists('config.ini'):
+    elif os.path.exists('config.ini'):  # no command line arguments, check for config.ini
         tickers = read_config()
     if not tickers:  # no config.ini or command line arguments
         tickers = raw_input('Enter ticker or tickers, separated by comma: ').replace(' ', '').split(',')  # ask user
-
     if tickers[0].lower() != 'quit':  # check if user decided to quit
         for tkr in tickers:  # loop trough tickers
             print '\nStart download for ticker {}'.format(tkr.upper())
