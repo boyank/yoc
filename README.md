@@ -1,4 +1,4 @@
-# yahoo_options
+# yoc (yahoo options chains)
 
 version 2, works with yahoo.com website design since July 2016.
 
