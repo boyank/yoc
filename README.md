@@ -1,10 +1,10 @@
-# yoc (yahoo options chains)
+# yoc (yahoo option chains)
 
 version 2, works with yahoo.com website design since July 2016.
 
 yahoo_options.py is a command line tool for scraping financial options prices and related data from <a href=http://finance.yahoo.com/>finance.yahoo.com</a>
 
-It's written in Python 2.7 and also ported to Python 3.4 using 2to3 tool.
+It's written in Python 2.7 and also ported to Python 3.4 using 2to3 tool (TODO for ver.2).
 
 It can be used to scrape current options data for one or more tickers.
 There are several ways to supply list of tickers (in order of priority):
