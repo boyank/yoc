@@ -23,7 +23,7 @@ def read_config():
     try:
         tickers_list = my_parser.get('Tickers', 'TickerList')
         tickers_list.replace(' ', '').replace(';', ',').split(',')
-        if ticker_list == ['']: # config.ini had an empty TickerList
+        if tickers_list == ['']: # config.ini had an empty TickerList
             return None
         else:
             return ticker_list
