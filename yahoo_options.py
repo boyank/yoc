@@ -26,7 +26,7 @@ def read_config():
         if tickers_list == ['']: # config.ini had an empty TickerList
             return None
         else:
-            return ticker_list
+            return tickers_list
     except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         return None
 
