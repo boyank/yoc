@@ -14,7 +14,7 @@ import configparser
 
 
 def read_config():
-    """Read configuration file config.ini
+    """Read configuration from file config.ini
 
     :return: tickers as list
     """
@@ -23,7 +23,7 @@ def read_config():
     try:
         tickers_list = my_parser.get('Tickers', 'TickerList')
         tickers_list = tickers_list.replace(' ', '').replace(';', ',').split(',')
-        if tickers_list == ['']: # config.ini had an empty TickerList
+        if tickers_list == ['']:  # config.ini had an empty TickerList
             return None
         else:
             return tickers_list
@@ -31,7 +31,13 @@ def read_config():
         return None
 
 
-def create_link(ticker, expiration_date=None):
+def create_url(ticker, expiration_date=None):
+    """Create download url for ticker and [optionally] expiration date
+
+    :param ticker:
+    :param expiration_date:
+    :return: url as str
+    """
     srv = randrange(1, 3, 1)  # select randomly to use query1 or query2
     if expiration_date:
         link = 'https://query{}.finance.yahoo.com/v7/finance/options/{}?date={}'.format(srv, ticker, expiration_date)
@@ -41,7 +47,14 @@ def create_link(ticker, expiration_date=None):
 
 
 def get_json_data(ticker, expiration_date=None, return_value='all'):
-    url = create_link(ticker, expiration_date=expiration_date)
+    """Request data as json from finance.yahoo.com
+
+    :param ticker:
+    :param expiration_date: optional
+    :param return_value: optional
+    :return: json object as required by return_value
+    """
+    url = create_url(ticker, expiration_date=expiration_date)
     try:
         chain_json = json.load(urllib.request.urlopen(url))
     except urllib.error.URLError as e:
@@ -67,7 +80,6 @@ def get_json_data(ticker, expiration_date=None, return_value='all'):
 
 
 def main(ticker):
-
     # change header_template to include the fields you want from fieldnames
     # i.e. the full list of possible fields
 
@@ -113,7 +125,7 @@ def main(ticker):
                 options_data = get_json_data(ticker, expiration_date=exp_date, return_value='options')
                 for opt_type in ('calls', 'puts'):
                     for option in options_data.setdefault(opt_type, []):
-                        option = {key:value for key, value in option.items() if key in wr_fieldnames}
+                        option = {key: value for key, value in option.items() if key in wr_fieldnames}
                         option['optionType'] = opt_type.upper()[:-1]
                         option['todayDate'] = datetime.strftime(date.today(), '%d.%m.%Y')
                         option['expiration'] = ed
