@@ -22,7 +22,11 @@ def read_config():
     my_parser.read('config.ini')
     try:
         tickers_list = my_parser.get('Tickers', 'TickerList')
-        return tickers_list.replace(' ', '').replace(';', ',').split(',')
+        tickers_list = tickers_list.replace(' ', '').replace(';', ',').split(',')
+        if tickers_list == ['']: # config.ini had an empty TickerList
+            return None
+        else:
+            return tickers_list
     except (configparser.NoSectionError, configparser.NoOptionError):
         return None
 
@@ -44,15 +48,12 @@ def get_json_data(ticker, expiration_date=None, return_value='all'):
         if hasattr(e, 'reason'):
             print('We failed to reach a server.')
             print('Reason: ', e.reason)
-            print('Unable to retrieve required data.')
-            print('Possible reasons:\n1. No Internet connection - check and/or try again later.')
-            print('2. No such ticker {0}\n3. There are no options for ticker {0}'.format(ticker))
         elif hasattr(e, 'code'):
             print('The server couldn\'t fulfill the request.')
             print('Error code: ', e.code)
-            print('Unable to retrieve required data.')
-            print('Possible reasons:\n1. No Internet connection - check and/or try again later.')
-            print('2. No such ticker {0}\n3. There are no options for ticker {0}'.format(ticker))
+        print('Unable to retrieve required data.')
+        print('Possible reasons:\n1. No Internet connection - check and/or try again later.')
+        print('2. No such ticker {0}\n3. There are no options for ticker {0}'.format(ticker))
         return []
     if chain_json['optionChain']['result']:
         if return_value == 'expiration dates':
@@ -82,9 +83,10 @@ def main(ticker):
     csv.register_dialect('yahoo', delimiter=',', quoting=csv.QUOTE_NONE, lineterminator='\n')
 
     # retrieve or create list of fieldnames
-    if os.path.isfile('{}.csv'.format(ticker)):  # already there is file from previous download
+    file_name = '{}.csv'.format(ticker)
+    if os.path.isfile(file_name):  # already there is file from previous download
         found_file = True
-        with open('{}.csv'.format(ticker), 'r') as f:
+        with open(file_name, 'r') as f:
             current_headers = csv.DictReader(f).fieldnames
             try:
                 wr_fieldnames = [all_fields[flnm] for flnm in current_headers]
@@ -97,7 +99,7 @@ def main(ticker):
 
     # write to file
     if wr_fieldnames:
-        with open('{}.csv'.format(ticker), 'a') as f:
+        with open(file_name, 'a') as f:
             my_writer = csv.DictWriter(f, fieldnames=wr_fieldnames, dialect='yahoo')
             # add headers if new file
             if not found_file:
