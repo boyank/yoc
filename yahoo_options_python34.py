@@ -56,7 +56,7 @@ def get_json_data(ticker, expiration_date=None, return_value='all'):
     """
     url = create_url(ticker, expiration_date=expiration_date)
     try:
-        chain_json = json.load(urllib.request.urlopen(url))
+        chain_json = json.loads(urllib.request.urlopen(url).read().decode('utf-8'))
     except urllib.error.URLError as e:
         if hasattr(e, 'reason'):
             print('We failed to reach a server.')
