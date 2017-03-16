@@ -2,7 +2,7 @@
 
 version 2, works with yahoo.com website design since July 2016.
 
-###Quick start
+### Quick start
 
 yahoo_options.py is a command line tool for scraping financial options prices and related data from <a href=http://finance.yahoo.com/>finance.yahoo.com</a>
 
@@ -31,7 +31,7 @@ _Enter ticker or tickers, separated by comma:_ googl,yhoo
 
 Downloaded data are stored as a csv file, one file for each ticker. If file already exists, it will append the new data.
 
-###Advanced usage
+### Advanced usage
 
 In ver.2 it requests and gets response in json format. See included json_response_GOOGL.json for sample of the json response. As you can see there are a lot more data available. One can easily change the script to parse the json and extract any of these data. All you need to do is to amend the get_json_data() to return the desired data. Eventually you will need to change slightly also the main function.
 
