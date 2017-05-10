@@ -140,7 +140,6 @@ if __name__ == '__main__':
         tickers = sys.argv[1:]
     elif os.path.exists('config.ini'):  # no command line arguments, check for config.ini
         tickers = read_config()
-        print(tickers)
     if not tickers:  # no config.ini or command line arguments
         tickers = input('Enter ticker or tickers, separated by comma: ').replace(' ', '').split(',')  # ask user
     if tickers[0].lower() != 'quit':  # check if user decided to quit
