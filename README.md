@@ -37,5 +37,5 @@ In ver.2 it requests and gets response in json format. See included json_respons
 
 ### Pandas DataReader
 
-I have recently discovered that <a href=https://github.com/pydata/pandas-datareader>pandas-datareader</a> suports download of options data from finanace.yahoo.com. It is still designated as Experimenal, but you should <a href=https://pandas-datareader.readthedocs.io/en/latest/remote_data.html>check the Docs</a> if you are interested in downloading and crunchig/analyze the data.
+I have recently discovered that <a href=https://github.com/pydata/pandas-datareader>pandas-datareader</a> suports download of options data from <a href=http://finance.yahoo.com/>finance.yahoo.com</a>. It is still designated as Experimenal, but you should <a href=https://pandas-datareader.readthedocs.io/en/latest/remote_data.html>check the Docs</a> if you are interested in downloading and crunchig/analyze the data.
 
